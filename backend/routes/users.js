@@ -237,4 +237,162 @@ router.put('/:id/block', auth, require('../middleware/admin'), async (req, res) 
   }
 });
 
+// GET /api/users/stats - rich viewing statistics for the logged-in user
+router.get('/stats', auth, async (req, res) => {
+  try {
+    const Movie = require('../models/Movie');
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    const watchedMovies = user.watchedMovies || [];
+    const watchedEpisodes = user.watchedEpisodes || [];
+
+    // Collect all movie ids we need (for movies + for episodes' parent series)
+    const movieIds = new Set([
+      ...watchedMovies.map((wm) => wm.movieId?.toString()).filter(Boolean),
+      ...watchedEpisodes.map((we) => we.movieId?.toString()).filter(Boolean),
+    ]);
+
+    const movies = await Movie.find({ _id: { $in: Array.from(movieIds) } });
+    const movieById = {};
+    movies.forEach((m) => { movieById[m._id.toString()] = m; });
+
+    let totalMinutes = 0;
+    const genreMinutes = {};
+    const genreCount = {};
+    const monthlyCount = {};
+    const weekdayCount = [0, 0, 0, 0, 0, 0, 0]; // Sun..Sat
+    const yearly = {};
+    const activityDates = new Set(); // for streaks, 'YYYY-MM-DD'
+
+    const registerEvent = (date, minutes, genre) => {
+      const d = date ? new Date(date) : new Date();
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const yearKey = String(d.getFullYear());
+      const dayKey = d.toISOString().slice(0, 10);
+
+      totalMinutes += minutes || 0;
+      if (genre) {
+        genreMinutes[genre] = (genreMinutes[genre] || 0) + (minutes || 0);
+        genreCount[genre] = (genreCount[genre] || 0) + 1;
+      }
+      monthlyCount[monthKey] = (monthlyCount[monthKey] || 0) + 1;
+      weekdayCount[d.getDay()] += 1;
+      activityDates.add(dayKey);
+
+      if (!yearly[yearKey]) yearly[yearKey] = { year: yearKey, moviesWatched: 0, episodesWatched: 0, minutes: 0 };
+      yearly[yearKey].minutes += minutes || 0;
+    };
+
+    watchedMovies.forEach((wm) => {
+      const movie = movieById[wm.movieId?.toString()];
+      registerEvent(wm.watchedAt, movie?.duration, movie?.genre);
+      const yearKey = String(new Date(wm.watchedAt || Date.now()).getFullYear());
+      if (yearly[yearKey]) yearly[yearKey].moviesWatched += 1;
+    });
+
+    watchedEpisodes.forEach((we) => {
+      const movie = movieById[we.movieId?.toString()];
+      const episode = movie?.episodes?.id ? movie.episodes.id(we.episodeId) : null;
+      registerEvent(we.watchedAt, episode?.duration, movie?.genre);
+      const yearKey = String(new Date(we.watchedAt || Date.now()).getFullYear());
+      if (yearly[yearKey]) yearly[yearKey].episodesWatched += 1;
+    });
+
+    // Genre breakdown, sorted by count
+    const genreBreakdown = Object.keys(genreCount)
+      .map((g) => ({ genre: g, count: genreCount[g], minutes: genreMinutes[g] || 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    // Last 12 months of activity (including empty months, oldest first)
+    const monthlyActivity = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      monthlyActivity.push({ month: key, count: monthlyCount[key] || 0 });
+    }
+
+    // Weekday activity, Monday-first for a more natural week view
+    const weekdayLabels = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nie'];
+    const weekdayActivity = weekdayLabels.map((label, idx) => {
+      const jsDay = (idx + 1) % 7; // convert Mon-first idx to JS Sun=0 index
+      return { day: label, count: weekdayCount[jsDay] };
+    });
+
+    // Streaks (consecutive days with at least one watch event)
+    const sortedDates = Array.from(activityDates).sort();
+    let longestStreak = 0;
+    let currentRun = 0;
+    let prevDate = null;
+    sortedDates.forEach((dateStr) => {
+      const d = new Date(dateStr);
+      if (prevDate) {
+        const diffDays = Math.round((d - prevDate) / 86400000);
+        currentRun = diffDays === 1 ? currentRun + 1 : 1;
+      } else {
+        currentRun = 1;
+      }
+      longestStreak = Math.max(longestStreak, currentRun);
+      prevDate = d;
+    });
+    // Current streak: consecutive days ending today or yesterday
+    let currentStreak = 0;
+    if (sortedDates.length) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const lastActive = sortedDates[sortedDates.length - 1];
+      if (lastActive === todayStr || lastActive === yesterdayStr) {
+        currentStreak = 1;
+        for (let i = sortedDates.length - 1; i > 0; i--) {
+          const diff = Math.round((new Date(sortedDates[i]) - new Date(sortedDates[i - 1])) / 86400000);
+          if (diff === 1) currentStreak += 1;
+          else break;
+        }
+      }
+    }
+
+    // My ratings (from Movie.ratings) - top rated + average
+    const myRatings = [];
+    movies.forEach((m) => {
+      const mine = (m.ratings || []).find((r) => r.user && r.user.toString() === req.user.id);
+      if (mine) {
+        myRatings.push({
+          movieId: m._id,
+          title: m.title,
+          posterUrl: m.posterUrl,
+          type: m.type,
+          score: mine.score,
+        });
+      }
+    });
+    const avgRatingGiven = myRatings.length
+      ? Number((myRatings.reduce((sum, r) => sum + r.score, 0) / myRatings.length).toFixed(2))
+      : 0;
+    const topRated = myRatings.sort((a, b) => b.score - a.score).slice(0, 5);
+
+    const yearlyReview = Object.values(yearly).sort((a, b) => Number(a.year) - Number(b.year));
+
+    res.json({
+      totals: {
+        moviesWatched: watchedMovies.length,
+        episodesWatched: watchedEpisodes.length,
+        totalMinutes,
+        totalHours: Math.floor(totalMinutes / 60),
+        avgRatingGiven,
+        ratedCount: myRatings.length,
+      },
+      genreBreakdown,
+      monthlyActivity,
+      weekdayActivity,
+      streak: { current: currentStreak, longest: longestStreak },
+      yearlyReview,
+      topRated,
+    });
+  } catch (err) {
+    console.error('STATS ERROR:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 module.exports = router;

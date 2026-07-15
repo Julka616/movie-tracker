@@ -17,62 +17,48 @@ export default function Login({ setToken }) {
       setToken(res.data.token);
       navigate('/movies');
     } catch (err) {
-      setError(err.response?.data?.msg || "Blad logowania");
+      setError(err.response?.data?.msg || "Błąd logowania");
     }
   };
 
   return (
-    <div className="min-h-screen bg-ink text-paper font-body flex items-center justify-center px-4 relative">
-      <div className="film-grain" />
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="text-center mb-6">
-          <span className="text-marquee text-2xl">&#9679;</span>
-          <h1 className="font-display text-4xl tracking-wide text-marquee mt-1">WEJSCIOWKA</h1>
-          <p className="font-mono text-xs text-paper/50 mt-1 uppercase tracking-widest">Zaloguj sie, aby wejsc na seans</p>
-        </div>
-
-        <div className="bg-stage border border-reel rounded-lg p-6">
-          {error && (
-            <div className="mb-4 px-3 py-2 rounded-md border border-velvet text-velvet font-mono text-xs">
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              name="email"
-              placeholder="Email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full px-3 py-2.5 rounded-md bg-ink border border-reel text-paper placeholder-paper/40 font-mono text-sm outline-none focus:border-marquee transition-colors"
-              required
-            />
-            <input
-              name="password"
-              placeholder="Haslo"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full px-3 py-2.5 rounded-md bg-ink border border-reel text-paper placeholder-paper/40 font-mono text-sm outline-none focus:border-marquee transition-colors"
-              required
-            />
-            <div className="text-right">
-              <button
-                type="button"
-                onClick={() => navigate('/forgot-password')}
-                className="font-mono text-[11px] text-paper/50 hover:text-marquee transition-colors"
-              >
-                Nie pamietam hasla
-              </button>
-            </div>
-            <button className="w-full py-2.5 rounded-md bg-marquee text-ink font-mono text-xs uppercase tracking-wider font-semibold hover:bg-marquee2 transition-colors">
-              Zaloguj sie
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-indigo-600">
+      <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
+        <h2 className="text-3xl font-bold mb-6 text-center text-blue-600">🎬 Logowanie</h2>
+        {error && <div className="bg-red-100 text-red-700 p-3 mb-4 rounded-lg border border-red-300">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            name="email"
+            placeholder="Email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
+          />
+          <input
+            name="password"
+            placeholder="Hasło"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
+          />
+          <div className="text-right text-sm">
+            <button
+              type="button"
+              onClick={() => navigate('/forgot-password')}
+              className="text-blue-500 font-semibold hover:underline"
+            >
+              Nie pamiętam hasła
             </button>
-          </form>
-          <p className="mt-5 text-center font-mono text-xs text-paper/50">
-            Nie masz konta? <Link to="/register" className="text-marquee hover:underline">Zarejestruj sie</Link>
-          </p>
-        </div>
+          </div>
+          <button className="w-full bg-blue-500 text-white p-3 rounded-lg font-bold hover:bg-blue-600 transition">Zaloguj się</button>
+        </form>
+        <p className="mt-4 text-center text-sm text-gray-700">
+          Nie masz konta? <Link to="/register" className="text-blue-500 font-semibold hover:underline">Zarejestruj się</Link>
+        </p>
       </div>
     </div>
   );

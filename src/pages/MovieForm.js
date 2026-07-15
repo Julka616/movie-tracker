@@ -23,6 +23,13 @@ export default function MovieForm() {
   const [loading, setLoading] = useState(id ? true : false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // --- TMDB import ---
+  const [tmdbQuery, setTmdbQuery] = useState('');
+  const [tmdbResults, setTmdbResults] = useState([]);
+  const [tmdbSearching, setTmdbSearching] = useState(false);
+  const [tmdbImporting, setTmdbImporting] = useState(false);
+  const [tmdbError, setTmdbError] = useState('');
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -79,6 +86,51 @@ export default function MovieForm() {
     setForm({ ...form, [name]: value });
   };
 
+  const handleTmdbSearch = async (e) => {
+    e.preventDefault();
+    if (!tmdbQuery.trim()) return;
+    setTmdbSearching(true);
+    setTmdbError('');
+    try {
+      const tmdbType = form.type === 'series' ? 'tv' : 'movie';
+      const res = await API.get('/tmdb/search', { params: { query: tmdbQuery, type: tmdbType } });
+      setTmdbResults(res.data);
+    } catch (err) {
+      setTmdbError(err.response?.data?.msg || 'Nie udało się wyszukać w TMDB.');
+      setTmdbResults([]);
+    } finally {
+      setTmdbSearching(false);
+    }
+  };
+
+  const handleTmdbImport = async (result) => {
+    setTmdbImporting(true);
+    setTmdbError('');
+    try {
+      const tmdbType = result.mediaType === 'tv' ? 'tv' : 'movie';
+      const res = await API.get(`/tmdb/details/${tmdbType}/${result.tmdbId}`);
+      const d = res.data;
+      setForm((prev) => ({
+        ...prev,
+        title: d.title || prev.title,
+        director: d.director || prev.director,
+        year: d.year || prev.year,
+        genre: d.genre || prev.genre,
+        posterUrl: d.posterUrl || prev.posterUrl,
+        description: d.description || prev.description,
+        trailerUrl: d.trailerUrl || prev.trailerUrl,
+        duration: d.duration || prev.duration,
+        type: d.type || prev.type,
+      }));
+      setTmdbResults([]);
+      setTmdbQuery('');
+    } catch (err) {
+      setTmdbError(err.response?.data?.msg || 'Nie udało się pobrać danych z TMDB.');
+    } finally {
+      setTmdbImporting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -109,6 +161,59 @@ export default function MovieForm() {
           {id ? 'Edytuj' : 'Dodaj nowy'} {form.type === 'series' ? 'serial' : 'film'}
         </h1>
         {error && <div className="bg-red-100 text-red-700 p-3 mb-4 rounded-lg border border-red-300">{error}</div>}
+
+        <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+          <h2 className="text-sm font-bold text-indigo-700 uppercase tracking-wide mb-2">
+            Zaimportuj dane z TMDB
+          </h2>
+          <p className="text-xs text-indigo-500 mb-3">
+            Wyszukaj tytuł, a plakat, opis, rok, gatunek, reżysera i zwiastun uzupełnimy automatycznie.
+          </p>
+          <form onSubmit={handleTmdbSearch} className="flex gap-2">
+            <input
+              type="text"
+              placeholder={`Szukaj ${form.type === 'series' ? 'serialu' : 'filmu'} w TMDB...`}
+              value={tmdbQuery}
+              onChange={(e) => setTmdbQuery(e.target.value)}
+              className="flex-1 p-3 border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            />
+            <button
+              type="submit"
+              disabled={tmdbSearching}
+              className="px-5 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+            >
+              {tmdbSearching ? 'Szukam...' : 'Szukaj'}
+            </button>
+          </form>
+
+          {tmdbError && (
+            <div className="mt-3 text-sm text-red-600">{tmdbError}</div>
+          )}
+
+          {tmdbResults.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {tmdbResults.map((r) => (
+                <button
+                  type="button"
+                  key={r.tmdbId}
+                  onClick={() => handleTmdbImport(r)}
+                  disabled={tmdbImporting}
+                  className="text-left bg-white border border-indigo-200 rounded-lg overflow-hidden hover:shadow-lg hover:border-indigo-400 transition disabled:opacity-50"
+                >
+                  <img
+                    src={r.posterUrl || 'https://via.placeholder.com/200x300?text=Brak+plakatu'}
+                    alt={r.title}
+                    className="w-full h-40 object-cover"
+                  />
+                  <div className="p-2">
+                    <div className="text-xs font-semibold text-gray-800 truncate">{r.title}</div>
+                    <div className="text-[11px] text-gray-500">{r.year || '—'}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
