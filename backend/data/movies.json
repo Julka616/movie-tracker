@@ -1,0 +1,52 @@
+[
+  {
+    "title": "Inception",
+    "director": "Christopher Nolan",
+    "year": 2010,
+    "genre": "Sci-Fi",
+    "posterUrl": "https://image.tmdb.org/t/p/w500/qmDpIHrmpJINaRKAfWQfftjCdyi.jpg",
+    "type": "movie",
+    "description": "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.",
+    "trailerUrl": "https://www.youtube.com/watch?v=YoHD9XEInc0",
+    "duration": 148
+  },
+  {
+    "title": "The Matrix",
+    "director": "The Wachowskis",
+    "year": 1999,
+    "genre": "Sci-Fi",
+    "posterUrl": "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+    "type": "movie",
+    "description": "A computer hacker learns about the true nature of reality and his role in the war against its controllers.",
+    "trailerUrl": "https://www.youtube.com/watch?v=vKQi3bBA1y8",
+    "duration": 136
+  },
+  {
+    "title": "Breaking Bad",
+    "director": "Vince Gilligan",
+    "year": 2008,
+    "genre": "Crime",
+    "posterUrl": "https://image.tmdb.org/t/p/w500/eSzpy96DwBujGFj0xMbXBcGcfxX.jpg",
+    "type": "series",
+    "description": "A high school chemistry teacher turned methamphetamine producer navigates dangers of the criminal world.",
+    "trailerUrl": "https://www.youtube.com/watch?v=HhesaQXLuRY",
+    "episodes": [
+      {
+        "seasonNumber": 1,
+        "episodeNumber": 1,
+        "title": "Pilot",
+        "description": "Walt and Jesse begin cooking.",
+        "duration": 58,
+        "airDate": "2008-01-20"
+      },
+      {
+        "seasonNumber": 1,
+        "episodeNumber": 2,
+        "title": "Cat's in the Bag...",
+        "description": "Consequences unfold.",
+        "duration": 48,
+        "airDate": "2008-01-27"
+      }
+    ]
+  }
+]
