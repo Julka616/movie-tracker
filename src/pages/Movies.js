@@ -176,15 +176,18 @@ export default function Movies() {
                 className="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
-            <div className="w-full md:w-28">
+            <div className="w-full md:w-32">
               <label className="block text-purple-300 text-xs uppercase tracking-wide mb-1">Rok</label>
-              <input
-                type="number"
-                placeholder="2024"
+              <select
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
+                className="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option className="text-black" value="">Wszystkie lata</option>
+                {Array.from({ length: new Date().getFullYear() + 1 - 1900 }, (_, i) => new Date().getFullYear() + 1 - i).map((y) => (
+                  <option className="text-black" key={y} value={y}>{y}</option>
+                ))}
+              </select>
             </div>
             <div className="w-full md:w-36">
               <label className="block text-purple-300 text-xs uppercase tracking-wide mb-1">Typ</label>

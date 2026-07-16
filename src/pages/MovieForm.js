@@ -234,14 +234,17 @@ export default function MovieForm() {
               className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
-            <input
+            <select
               name="year"
-              type="number"
-              placeholder="Rok"
               value={form.year}
               onChange={handleChange}
               className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+            >
+              <option value="">Wybierz rok</option>
+              {Array.from({ length: new Date().getFullYear() + 1 - 1900 }, (_, i) => new Date().getFullYear() + 1 - i).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
 
             <input
               name="genre"

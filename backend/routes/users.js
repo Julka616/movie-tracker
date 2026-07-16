@@ -14,12 +14,12 @@ router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
-    return res.status(400).json({ msg: 'Please enter all fields' });
+    return res.status(400).json({ msg: 'Wypełnij wszystkie pola' });
   }
 
   try {
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ msg: 'User already exists' });
+    if (user) return res.status(400).json({ msg: 'Konto z tym adresem e-mail już istnieje. Spróbuj się zalogować.' });
 
     user = new User({ name, email, password, role: 'user' });
     console.log('Saving user:', user);
@@ -45,17 +45,17 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ msg: 'Please enter all fields' });
+    return res.status(400).json({ msg: 'Wypełnij wszystkie pola' });
   }
 
   try {
     let user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
+    if (!user) return res.status(400).json({ msg: 'Nie znaleziono konta z tym adresem e-mail' });
 
-    if (user.blocked) return res.status(403).json({ msg: 'Account blocked by administrator' });
+    if (user.blocked) return res.status(403).json({ msg: 'To konto zostało zablokowane przez administratora' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+    if (!isMatch) return res.status(400).json({ msg: 'Nieprawidłowe hasło' });
 
     const payload = { user: { id: user._id, role: user.role } };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });

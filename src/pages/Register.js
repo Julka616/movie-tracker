@@ -16,7 +16,13 @@ export default function Register({ setToken }) {
       setToken(res.data.token);
       localStorage.setItem("token", res.data.token);
     } catch (err) {
-      setError(err.response?.data?.msg || "Błąd rejestracji");
+      if (err.response?.data?.msg) {
+        setError(err.response.data.msg);
+      } else if (err.response) {
+        setError(`Błąd serwera (${err.response.status}). Spróbuj ponownie za chwilę.`);
+      } else {
+        setError('Nie udało się połączyć z serwerem. Sprawdź internet i spróbuj ponownie za kilkanaście sekund (serwer mógł właśnie "budzić się" po uśpieniu).');
+      }
     }
   };
 
