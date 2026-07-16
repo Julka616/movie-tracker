@@ -17,6 +17,9 @@ export default function Profile() {
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ name: '', privacy: 'private' });
   const [lists, setLists] = useState({ toWatch: [], watching: [], watched: [] });
+  const [favorites, setFavorites] = useState([]);
+  const [favoritesEditing, setFavoritesEditing] = useState(false);
+  const [favoriteSearch, setFavoriteSearch] = useState('');
   const [expandedSections, setExpandedSections] = useState(() => {
     const saved = localStorage.getItem('profileExpandedSections');
     return saved ? JSON.parse(saved) : {
@@ -50,7 +53,37 @@ export default function Profile() {
     }
     fetchUserData();
     fetchMovies();
+    fetchFavorites();
   }, [navigate]);
+
+  const fetchFavorites = async () => {
+    try {
+      const res = await API.get('/users/favorites');
+      setFavorites(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch favorites:', err);
+    }
+  };
+
+  const toggleFavorite = async (movieId) => {
+    const alreadyIn = favorites.some((f) => f._id === movieId);
+    let newIds;
+    if (alreadyIn) {
+      newIds = favorites.filter((f) => f._id !== movieId).map((f) => f._id);
+    } else {
+      if (favorites.length >= 4) {
+        alert('Możesz wybrać maksymalnie 4 ulubione tytuły. Usuń jeden, żeby dodać nowy.');
+        return;
+      }
+      newIds = [...favorites.map((f) => f._id), movieId];
+    }
+    try {
+      const res = await API.put('/users/favorites', { movieIds: newIds });
+      setFavorites(res.data || []);
+    } catch (err) {
+      alert(err.response?.data?.msg || 'Nie udało się zapisać ulubionych');
+    }
+  };
 
   const fetchUserData = async () => {
     try {
@@ -64,6 +97,93 @@ export default function Profile() {
       console.error('Failed to fetch user:', err);
     }
   };
+        {/* Favorites Section */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-8 mb-8 border border-white/20">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-white">Ulubione</h2>
+                <p className="text-purple-300 text-sm">Twoje 4 ukochane tytuły</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setFavoritesEditing(!favoritesEditing)}
+              className="px-5 py-2 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 font-semibold transition-all duration-300 border border-white/20 text-sm"
+            >
+              {favoritesEditing ? 'Gotowe' : 'Edytuj'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[0, 1, 2, 3].map((slot) => {
+              const fav = favorites[slot];
+              return (
+                <div
+                  key={slot}
+                  className={`aspect-[2/3] rounded-xl border-2 border-dashed overflow-hidden relative ${
+                    fav ? 'border-transparent' : 'border-white/20 flex items-center justify-center'
+                  }`}
+                >
+                  {fav ? (
+                    <>
+                      <Link to={`/movies/${fav._id}`}>
+                        <img src={fav.posterUrl || 'https://via.placeholder.com/200x300?text=No+Image'} alt={fav.title} className="w-full h-full object-cover" />
+                      </Link>
+                      {favoritesEditing && (
+                        <button
+                          onClick={() => toggleFavorite(fav._id)}
+                          className="absolute top-1 right-1 w-7 h-7 bg-red-500/90 hover:bg-red-500 text-white rounded-full text-sm font-bold"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-purple-400 text-4xl">+</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {favoritesEditing && (
+            <div className="mt-6 bg-white/5 rounded-xl p-4 border border-white/10">
+              <input
+                type="text"
+                placeholder="Szukaj filmu lub serialu do dodania..."
+                value={favoriteSearch}
+                onChange={(e) => setFavoriteSearch(e.target.value)}
+                className="w-full mb-3 p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-72 overflow-y-auto">
+                {movies
+                  .filter((m) => m.title.toLowerCase().includes(favoriteSearch.toLowerCase()))
+                  .slice(0, 24)
+                  .map((m) => {
+                    const isFav = favorites.some((f) => f._id === m._id);
+                    return (
+                      <button
+                        key={m._id}
+                        onClick={() => toggleFavorite(m._id)}
+                        className={`text-left rounded-lg overflow-hidden border transition ${
+                          isFav ? 'border-pink-400 ring-2 ring-pink-400/50' : 'border-white/10 hover:border-white/30'
+                        }`}
+                      >
+                        <img src={m.posterUrl || 'https://via.placeholder.com/150x220?text=No+Image'} alt={m.title} className="w-full h-28 object-cover" />
+                        <div className="p-1 text-[11px] text-white truncate">{m.title}</div>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+        </div>
+
 
   const fetchPopulatedLists = async () => {
     try {
@@ -183,6 +303,12 @@ export default function Profile() {
               className="group px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 font-semibold transition-all duration-300 border border-white/20 flex items-center gap-2"
             >
               📊 Statystyki
+            </Link>
+            <Link
+              to="/friends"
+              className="group px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 font-semibold transition-all duration-300 border border-white/20 flex items-center gap-2"
+            >
+              👥 Znajomi
             </Link>
             {isAdmin && (
               <Link 

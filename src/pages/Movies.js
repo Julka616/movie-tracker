@@ -137,6 +137,14 @@ export default function Movies({ darkMode, setDarkMode }) {
                   Statystyki
                 </button>
                 <button
+                  onClick={() => navigate('/friends')}
+                  className={`px-4 py-2 rounded-md font-mono text-xs uppercase tracking-wider border transition-colors ${
+                    darkMode ? 'border-reel text-paper hover:border-marquee hover:text-marquee' : 'border-reel/30 text-ink hover:border-marquee hover:text-velvet'
+                  }`}
+                >
+                  Znajomi
+                </button>
+                <button
                   onClick={() => navigate('/profile')}
                   className={`px-4 py-2 rounded-md font-mono text-xs uppercase tracking-wider border transition-colors ${
                     darkMode ? 'border-reel text-paper hover:border-marquee hover:text-marquee' : 'border-reel/30 text-ink hover:border-marquee hover:text-velvet'

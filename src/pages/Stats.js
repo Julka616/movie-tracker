@@ -76,6 +76,12 @@ export default function Stats() {
               Profil
             </Link>
             <Link
+              to="/friends"
+              className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 font-semibold transition-all duration-300 border border-white/20"
+            >
+              👥 Znajomi
+            </Link>
+            <Link
               to="/movies"
               className="group px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 font-semibold transition-all duration-300 border border-white/20 flex items-center gap-2"
             >

@@ -11,6 +11,7 @@ import ResetPassword from "./pages/ResetPassword";
 import MovieForm from "./pages/MovieForm";
 import Profile from "./pages/Profile";
 import Stats from "./pages/Stats";
+import Friends from "./pages/Friends";
 import { setToken as setAPIToken } from "./services/api";
 
 function App() {
@@ -60,6 +61,7 @@ function App() {
         <Route path="/movies/:id/edit" element={<MovieForm />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/friends" element={<Friends />} />
         <Route path="/admin" element={<AdminPanel />} />
         {!token ? (
           <>
