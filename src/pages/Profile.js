@@ -178,6 +178,12 @@ export default function Profile() {
             <p className="text-purple-300 text-sm">Zarządzaj kontem i śledź historię oglądania</p>
           </div>
           <div className="flex gap-3">
+            <Link
+              to="/stats"
+              className="group px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 font-semibold transition-all duration-300 border border-white/20 flex items-center gap-2"
+            >
+              📊 Statystyki
+            </Link>
             {isAdmin && (
               <Link 
                 to="/admin" 
