@@ -395,4 +395,46 @@ router.get('/stats', auth, async (req, res) => {
   }
 });
 
+// PUT /api/users/favorites - set my 4 favorite movies/series (order matters)
+router.put('/favorites', auth, async (req, res) => {
+  try {
+    const Movie = require('../models/Movie');
+    const { movieIds } = req.body;
+    if (!Array.isArray(movieIds)) {
+      return res.status(400).json({ msg: 'movieIds musi być tablicą' });
+    }
+    if (movieIds.length > 4) {
+      return res.status(400).json({ msg: 'Możesz wybrać maksymalnie 4 ulubione tytuły' });
+    }
+
+    const existing = await Movie.find({ _id: { $in: movieIds } }).select('_id');
+    const validIds = new Set(existing.map((m) => m._id.toString()));
+    const filtered = movieIds.filter((id) => validIds.has(id));
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    user.favorites = filtered;
+    await user.save();
+
+    const populated = await User.findById(req.user.id).populate('favorites');
+    res.json(populated.favorites);
+  } catch (err) {
+    console.error('SET FAVORITES ERROR:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// GET /api/users/favorites - my favorites, populated with movie details
+router.get('/favorites', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('favorites');
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    res.json(user.favorites || []);
+  } catch (err) {
+    console.error('GET FAVORITES ERROR:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 module.exports = router;

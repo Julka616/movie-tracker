@@ -9,7 +9,7 @@ export default function Movies({ darkMode, setDarkMode }) {
   const [ratings, setRatings] = useState({});
   const [token, setTokenState] = useState(localStorage.getItem('token'));
   const [isAdmin, setIsAdmin] = useState(false);
-  const [listStatus, setListStatus] = useState({});
+  const [listStatus, setListStatus] = useState({}); // { [movieId]: 'toWatch'|'watching'|'watched' }
   const [currentUserId, setCurrentUserId] = useState(null);
   const navigate = useNavigate();
 
@@ -30,6 +30,7 @@ export default function Movies({ darkMode, setDarkMode }) {
         setCurrentUserId(decoded.user?.id || null);
       } catch (err) {
         console.error('Token decode error:', err);
+        // Token jest nieprawidłowy, wyczyść
         localStorage.removeItem('token');
         setTokenState(null);
       }
@@ -46,6 +47,7 @@ export default function Movies({ darkMode, setDarkMode }) {
     try {
       const res = await API.get('/movies', { params: { search, genre, year, type, sort } });
       setMovies(res.data);
+      // Inicjalizacja mojej oceny na podstawie danych z backendu
       if (currentUserId) {
         const map = {};
         res.data.forEach(m => {
@@ -126,6 +128,14 @@ export default function Movies({ darkMode, setDarkMode }) {
           <div className="flex items-center gap-2 flex-wrap">
             {token ? (
               <>
+                <button
+                  onClick={() => navigate('/stats')}
+                  className={`px-4 py-2 rounded-md font-mono text-xs uppercase tracking-wider border transition-colors ${
+                    darkMode ? 'border-reel text-paper hover:border-marquee hover:text-marquee' : 'border-reel/30 text-ink hover:border-marquee hover:text-velvet'
+                  }`}
+                >
+                  Statystyki
+                </button>
                 <button
                   onClick={() => navigate('/profile')}
                   className={`px-4 py-2 rounded-md font-mono text-xs uppercase tracking-wider border transition-colors ${

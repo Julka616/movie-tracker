@@ -22,6 +22,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/user-movies', require('./routes/userMovies'));
 app.use('/api/movies', require('./routes/movies'));
 app.use('/api/tmdb', require('./routes/tmdb'));
+app.use('/api/friends', require('./routes/friends'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

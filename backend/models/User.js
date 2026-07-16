@@ -15,6 +15,12 @@ const UserSchema = new mongoose.Schema({
     watching: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],
     watched: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],
   },
+  // Ulubione (max 4, jak na Letterboxd) - kolejność ma znaczenie
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],
+  // Znajomi - relacja przechowywana symetrycznie po obu stronach po akceptacji
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  friendRequestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   watchedEpisodes: [
     {
       movieId: { type: mongoose.Schema.Types.ObjectId, ref: 'Movie' },
