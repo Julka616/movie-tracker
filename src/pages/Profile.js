@@ -301,67 +301,6 @@ export default function Profile() {
           )}
         </div>
 
-        {/* Stats Cards */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-8 mb-8 border border-white/20">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white">Statystyki Oglądania</h2>
-              <p className="text-purple-300 text-sm">Twoja aktywność oglądania</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="group bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div className="text-3xl opacity-20">⏱️</div>
-              </div>
-              <div className="text-4xl font-bold mb-2">{totalHours}h {totalMinutes}m</div>
-              <div className="text-sm text-blue-100 uppercase tracking-wide font-semibold">Razem czasu oglądania</div>
-            </div>
-            <div className="group bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-                </svg>
-                <div className="text-3xl opacity-20">🎬</div>
-              </div>
-              <div className="text-4xl font-bold mb-2">{stats.moviesWatched}</div>
-              <div className="text-sm text-green-100 uppercase tracking-wide font-semibold">Filmy obejrzane</div>
-            </div>
-            <div className="group bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl p-6 text-white hover:scale-105 transition-transform duration-300 cursor-pointer shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <div className="text-3xl opacity-20">📺</div>
-              </div>
-              <div className="text-4xl font-bold mb-2">{stats.episodesWatched}</div>
-              <div className="text-sm text-pink-100 uppercase tracking-wide font-semibold">Odcinki obejrzane</div>
-            </div>
-          </div>
-          {stats.topGenres && stats.topGenres.length > 0 && (
-            <div className="mt-6 bg-white/5 rounded-xl p-4 border border-white/10">
-              <h3 className="text-lg font-semibold text-purple-300 mb-3 flex items-center gap-2">
-                <span>🎭</span> Top Gatunki
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {stats.topGenres.map(([g,c]) => (
-                  <span key={g} className="px-4 py-2 bg-purple-500/20 text-purple-200 rounded-lg border border-purple-500/30 font-semibold">
-                    {g} ({c})
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Top Rated Section */}
         {bestRated && bestRated.length > 0 && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-8 mb-8 border border-white/20">
