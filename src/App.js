@@ -16,15 +16,6 @@ import { setToken as setAPIToken } from "./services/api";
 
 function App() {
   const [token, setTokenState] = useState(localStorage.getItem("token"));
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : false;
-  });
-
-  const handleDarkMode = (value) => {
-    setDarkMode(value);
-    localStorage.setItem("darkMode", JSON.stringify(value));
-  };
 
   const handleSetToken = (t) => {
     if (t) {
@@ -54,8 +45,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Movies darkMode={darkMode} setDarkMode={handleDarkMode} />} />
-        <Route path="/movies" element={<Movies darkMode={darkMode} setDarkMode={handleDarkMode} />} />
+        <Route path="/" element={<Movies />} />
+        <Route path="/movies" element={<Movies />} />
         <Route path="/movies/:id" element={<MovieDetails />} />
         <Route path="/movies/add" element={<MovieForm />} />
         <Route path="/movies/:id/edit" element={<MovieForm />} />
