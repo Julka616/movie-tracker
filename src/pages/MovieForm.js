@@ -35,6 +35,7 @@ export default function MovieForm() {
   const [episodeSearching, setEpisodeSearching] = useState(false);
   const [episodeImporting, setEpisodeImporting] = useState(false);
   const [episodeImportMsg, setEpisodeImportMsg] = useState('');
+  const [episodeSearched, setEpisodeSearched] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -138,10 +139,11 @@ export default function MovieForm() {
   };
 
   const handleEpisodeSearch = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!episodeQuery.trim()) return;
     setEpisodeSearching(true);
     setEpisodeImportMsg('');
+    setEpisodeSearched(false);
     try {
       const res = await API.get('/tmdb/search', { params: { query: episodeQuery, type: 'tv' } });
       setEpisodeResults(res.data);
@@ -150,6 +152,7 @@ export default function MovieForm() {
       setEpisodeResults([]);
     } finally {
       setEpisodeSearching(false);
+      setEpisodeSearched(true);
     }
   };
 
@@ -347,25 +350,33 @@ export default function MovieForm() {
                 <p className="text-xs text-cyan-600 mb-3">
                   Wyszukaj ten serial w TMDB, żeby jednym kliknięciem dodać wszystkie sezony i odcinki.
                 </p>
-                <form onSubmit={handleEpisodeSearch} className="flex gap-2">
+                <div className="flex gap-2">
                   <input
                     type="text"
                     placeholder="Szukaj serialu w TMDB..."
                     value={episodeQuery}
                     onChange={(e) => setEpisodeQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleEpisodeSearch(e); } }}
                     className="flex-1 p-3 border border-cyan-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   />
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleEpisodeSearch}
                     disabled={episodeSearching}
                     className="px-5 py-3 bg-cyan-600 text-white rounded-lg font-semibold hover:bg-cyan-700 transition disabled:opacity-50"
                   >
                     {episodeSearching ? 'Szukam...' : 'Szukaj'}
                   </button>
-                </form>
+                </div>
 
                 {episodeImportMsg && (
                   <div className="mt-3 text-sm text-cyan-700 font-semibold">{episodeImportMsg}</div>
+                )}
+
+                {episodeSearched && episodeResults.length === 0 && !episodeSearching && (
+                  <div className="mt-3 text-sm text-gray-500">
+                    Brak wyników w TMDB dla tej frazy — spróbuj oryginalnego (np. angielskiego) tytułu.
+                  </div>
                 )}
 
                 {episodeResults.length > 0 && (
