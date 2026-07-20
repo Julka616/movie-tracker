@@ -62,15 +62,15 @@ router.get('/season/:tvId/:seasonNumber', auth, admin, async (req, res) => {
   }
 });
 
-// POST /api/tmdb/import-popular - one-click bulk import of currently popular movies/series
+// POST /api/tmdb/import-popular - one-click bulk import of popular movies/series
 router.post('/import-popular', auth, admin, async (req, res) => {
   try {
-    const movieCount = Math.min(Number(req.body?.movieCount) || 15, 30);
-    const seriesCount = Math.min(Number(req.body?.seriesCount) || 10, 30);
+    const movieCount = Math.min(Number(req.body?.movieCount) || 30, 40);
+    const seriesCount = Math.min(Number(req.body?.seriesCount) || 30, 40);
 
     const [popularMovies, popularSeries] = await Promise.all([
-      tmdb.getPopularMovies(movieCount),
-      tmdb.getPopularTv(seriesCount),
+      tmdb.getMovieList('popular', movieCount),
+      tmdb.getTvList('popular', seriesCount),
     ]);
 
     const added = [];

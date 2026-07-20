@@ -61,14 +61,32 @@ async function multiSearch(query) {
     .map((item) => normalizeSearchResult(item, item.media_type));
 }
 
-async function getPopularMovies(count = 15) {
-  const data = await tmdbGet('/movie/popular');
-  return (data.results || []).slice(0, count).map((item) => normalizeSearchResult(item, 'movie'));
+async function getMovieList(category = 'popular', count = 15) {
+  const items = [];
+  let page = 1;
+  while (items.length < count && page <= 10) {
+    const data = await tmdbGet(`/movie/${category}`, { page });
+    const results = data.results || [];
+    if (results.length === 0) break;
+    items.push(...results.map((item) => normalizeSearchResult(item, 'movie')));
+    if (page >= (data.total_pages || 1)) break;
+    page += 1;
+  }
+  return items.slice(0, count);
 }
 
-async function getPopularTv(count = 10) {
-  const data = await tmdbGet('/tv/popular');
-  return (data.results || []).slice(0, count).map((item) => normalizeSearchResult(item, 'tv'));
+async function getTvList(category = 'popular', count = 10) {
+  const items = [];
+  let page = 1;
+  while (items.length < count && page <= 10) {
+    const data = await tmdbGet(`/tv/${category}`, { page });
+    const results = data.results || [];
+    if (results.length === 0) break;
+    items.push(...results.map((item) => normalizeSearchResult(item, 'tv')));
+    if (page >= (data.total_pages || 1)) break;
+    page += 1;
+  }
+  return items.slice(0, count);
 }
 
 async function getMovieDetails(id) {
@@ -138,8 +156,8 @@ async function getSeasonEpisodes(tvId, seasonNumber) {
 module.exports = {
   search,
   multiSearch,
-  getPopularMovies,
-  getPopularTv,
+  getMovieList,
+  getTvList,
   getMovieDetails,
   getTvDetails,
   getSeasonEpisodes,
