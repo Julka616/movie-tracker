@@ -29,6 +29,12 @@ export default function MovieForm() {
   const [tmdbSearching, setTmdbSearching] = useState(false);
   const [tmdbImporting, setTmdbImporting] = useState(false);
   const [tmdbError, setTmdbError] = useState('');
+  // --- TMDB episode import (for existing series) ---
+  const [episodeQuery, setEpisodeQuery] = useState('');
+  const [episodeResults, setEpisodeResults] = useState([]);
+  const [episodeSearching, setEpisodeSearching] = useState(false);
+  const [episodeImporting, setEpisodeImporting] = useState(false);
+  const [episodeImportMsg, setEpisodeImportMsg] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -128,6 +134,38 @@ export default function MovieForm() {
       setTmdbError(err.response?.data?.msg || 'Nie udało się pobrać danych z TMDB.');
     } finally {
       setTmdbImporting(false);
+    }
+  };
+
+  const handleEpisodeSearch = async (e) => {
+    e.preventDefault();
+    if (!episodeQuery.trim()) return;
+    setEpisodeSearching(true);
+    setEpisodeImportMsg('');
+    try {
+      const res = await API.get('/tmdb/search', { params: { query: episodeQuery, type: 'tv' } });
+      setEpisodeResults(res.data);
+    } catch (err) {
+      setEpisodeImportMsg(err.response?.data?.msg || 'Nie udało się wyszukać w TMDB.');
+      setEpisodeResults([]);
+    } finally {
+      setEpisodeSearching(false);
+    }
+  };
+
+  const handleImportEpisodes = async (tmdbId) => {
+    setEpisodeImporting(true);
+    setEpisodeImportMsg('');
+    try {
+      const res = await API.post(`/movies/${id}/import-episodes`, { tmdbId });
+      setEpisodeImportMsg(`Zaimportowano ${res.data.addedCount} nowych odcinków.`);
+      setEpisodeResults([]);
+      setEpisodeQuery('');
+      fetchMovie();
+    } catch (err) {
+      setEpisodeImportMsg(err.response?.data?.msg || 'Nie udało się zaimportować odcinków.');
+    } finally {
+      setEpisodeImporting(false);
     }
   };
 
@@ -302,6 +340,59 @@ export default function MovieForm() {
           {/* Episode Manager for Series */}
           {form.type === 'series' && id && (
             <div className="border-t-2 border-gray-200 pt-6 mt-6">
+              <div className="mb-6 p-4 bg-cyan-50 border border-cyan-200 rounded-lg">
+                <h2 className="text-sm font-bold text-cyan-700 uppercase tracking-wide mb-2">
+                  Zaimportuj sezony i odcinki z TMDB
+                </h2>
+                <p className="text-xs text-cyan-600 mb-3">
+                  Wyszukaj ten serial w TMDB, żeby jednym kliknięciem dodać wszystkie sezony i odcinki.
+                </p>
+                <form onSubmit={handleEpisodeSearch} className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Szukaj serialu w TMDB..."
+                    value={episodeQuery}
+                    onChange={(e) => setEpisodeQuery(e.target.value)}
+                    className="flex-1 p-3 border border-cyan-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={episodeSearching}
+                    className="px-5 py-3 bg-cyan-600 text-white rounded-lg font-semibold hover:bg-cyan-700 transition disabled:opacity-50"
+                  >
+                    {episodeSearching ? 'Szukam...' : 'Szukaj'}
+                  </button>
+                </form>
+
+                {episodeImportMsg && (
+                  <div className="mt-3 text-sm text-cyan-700 font-semibold">{episodeImportMsg}</div>
+                )}
+
+                {episodeResults.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {episodeResults.map((r) => (
+                      <button
+                        type="button"
+                        key={r.tmdbId}
+                        onClick={() => handleImportEpisodes(r.tmdbId)}
+                        disabled={episodeImporting}
+                        className="text-left bg-white border border-cyan-200 rounded-lg overflow-hidden hover:shadow-lg hover:border-cyan-400 transition disabled:opacity-50"
+                      >
+                        <img
+                          src={r.posterUrl || 'https://via.placeholder.com/200x300?text=Brak+plakatu'}
+                          alt={r.title}
+                          className="w-full h-40 object-cover"
+                        />
+                        <div className="p-2">
+                          <div className="text-xs font-semibold text-gray-800 truncate">{r.title}</div>
+                          <div className="text-[11px] text-gray-500">{r.year || '—'}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <h2 className="text-2xl font-bold mb-4 text-blue-600">Zarządzanie odcinkami</h2>
               <EpisodeManager
                 movie={form}

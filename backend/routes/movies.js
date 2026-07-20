@@ -4,6 +4,7 @@ const Movie = require('../models/Movie');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
+const tmdb = require('../services/tmdb');
 
 // Dodanie filmu (tylko admin)
 router.post('/', auth, admin, async (req, res) => {
@@ -194,6 +195,52 @@ router.post('/:id/episodes', auth, admin, async (req, res) => {
   } catch (err) {
     console.error('ADD EPISODE ERROR:', err);
     res.status(500).send('Server error');
+  }
+});
+
+// Masowy import odcinków z TMDB dla istniejącego serialu (tylko admin)
+router.post('/:id/import-episodes', auth, admin, async (req, res) => {
+  const { tmdbId } = req.body;
+  if (!tmdbId) return res.status(400).json({ msg: 'tmdbId jest wymagane' });
+
+  try {
+    const movie = await Movie.findById(req.params.id);
+    if (!movie) return res.status(404).json({ msg: 'Movie not found' });
+    if (movie.type !== 'series') return res.status(400).json({ msg: 'Tylko seriale mogą mieć odcinki' });
+
+    const details = await tmdb.getTvDetails(tmdbId);
+    const seasons = details.seasons || [];
+
+    let addedCount = 0;
+    for (const season of seasons) {
+      const episodes = await tmdb.getSeasonEpisodes(tmdbId, season.seasonNumber);
+      episodes.forEach((ep) => {
+        const alreadyExists = movie.episodes.some(
+          (e) => e.seasonNumber === ep.seasonNumber && e.episodeNumber === ep.episodeNumber
+        );
+        if (!alreadyExists) {
+          movie.episodes.push({
+            episodeNumber: ep.episodeNumber,
+            seasonNumber: ep.seasonNumber,
+            title: ep.title || `Odcinek ${ep.episodeNumber}`,
+            description: ep.description,
+            duration: ep.duration,
+            airDate: ep.airDate,
+          });
+          addedCount++;
+        }
+      });
+    }
+
+    movie.tmdbId = tmdbId;
+    await movie.save();
+    res.json({ movie, addedCount });
+  } catch (err) {
+    if (err.code === 'TMDB_NOT_CONFIGURED') {
+      return res.status(503).json({ msg: 'Integracja TMDB nie jest skonfigurowana (brak TMDB_API_KEY na serwerze)' });
+    }
+    console.error('IMPORT EPISODES ERROR:', err);
+    res.status(500).json({ msg: 'Nie udało się zaimportować odcinków z TMDB' });
   }
 });
 

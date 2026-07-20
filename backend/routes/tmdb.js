@@ -98,6 +98,7 @@ router.post('/import-popular', auth, admin, async (req, res) => {
           trailerUrl: details.trailerUrl,
           duration: details.duration,
           type: details.type,
+          tmdbId: item.tmdbId,
         });
         await movie.save();
         added.push(movie.title);

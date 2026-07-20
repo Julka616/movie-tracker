@@ -19,6 +19,7 @@ const MovieSchema = new mongoose.Schema({
   description: { type: String },
   trailerUrl: { type: String },
   duration: { type: Number }, 
+  tmdbId: { type: String },
   episodes: [EpisodeSchema], 
   ratings: [{ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, score: Number }],
   createdAt: { type: Date, default: Date.now },
