@@ -68,6 +68,8 @@ export default function AdminPanel() {
   const [year, setYear] = useState('');
   const [pageMovie, setPageMovie] = useState(1);
   const [pageSeries, setPageSeries] = useState(1);
+  const [importing, setImporting] = useState(false);
+  const [importMsg, setImportMsg] = useState('');
   const pageSize = 8;
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -125,6 +127,21 @@ export default function AdminPanel() {
     } catch (err) {
       console.error('Failed to delete movie:', err);
       alert('Nie można usunąć tego tytułu');
+    }
+  };
+
+  const handleImportPopular = async () => {
+    if (!window.confirm('Zaimportować ok. 25 popularnych filmów i seriali z TMDB? To może potrwać kilkanaście-kilkadziesiąt sekund.')) return;
+    setImporting(true);
+    setImportMsg('');
+    try {
+      const res = await API.post('/tmdb/import-popular', { movieCount: 15, seriesCount: 10 });
+      setImportMsg(`Dodano ${res.data.added.length} nowych tytułów (pominięto ${res.data.skipped.length}, bo już istniały lub wystąpił błąd).`);
+      fetchData();
+    } catch (err) {
+      setImportMsg(err.response?.data?.msg || 'Nie udało się zaimportować tytułów z TMDB.');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -287,7 +304,20 @@ export default function AdminPanel() {
               <PlusIcon />
               Dodaj Serial
             </Link>
+            <button
+              onClick={handleImportPopular}
+              disabled={importing}
+              className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:from-blue-600 hover:to-cyan-700 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              {importing ? 'Importuję...' : '⚡ Zaimportuj popularne z TMDB'}
+            </button>
           </div>
+
+          {importMsg && (
+            <div className="mb-6 bg-blue-500/20 border border-blue-400/40 text-blue-100 rounded-xl px-4 py-3 text-sm">
+              {importMsg}
+            </div>
+          )}
 
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

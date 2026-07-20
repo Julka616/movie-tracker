@@ -61,6 +61,16 @@ async function multiSearch(query) {
     .map((item) => normalizeSearchResult(item, item.media_type));
 }
 
+async function getPopularMovies(count = 15) {
+  const data = await tmdbGet('/movie/popular');
+  return (data.results || []).slice(0, count).map((item) => normalizeSearchResult(item, 'movie'));
+}
+
+async function getPopularTv(count = 10) {
+  const data = await tmdbGet('/tv/popular');
+  return (data.results || []).slice(0, count).map((item) => normalizeSearchResult(item, 'tv'));
+}
+
 async function getMovieDetails(id) {
   const [details, credits, videos] = await Promise.all([
     tmdbGet(`/movie/${id}`),
@@ -128,6 +138,8 @@ async function getSeasonEpisodes(tvId, seasonNumber) {
 module.exports = {
   search,
   multiSearch,
+  getPopularMovies,
+  getPopularTv,
   getMovieDetails,
   getTvDetails,
   getSeasonEpisodes,
